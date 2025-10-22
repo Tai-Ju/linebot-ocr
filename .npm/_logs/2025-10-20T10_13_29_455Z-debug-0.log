@@ -1,0 +1,45 @@
+0 verbose cli /usr/local/nvm/versions/node/v22.20.0/bin/node /usr/local/nvm/versions/node/v22.20.0/bin/npm
+1 info using npm@11.6.2
+2 info using node@v22.20.0
+3 silly config load:file:/usr/local/nvm/versions/node/v22.20.0/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/lk117868/.cache/typescript/5.8/.npmrc
+5 silly config load:file:/home/lk117868/.npmrc
+6 silly config load:file:/usr/local/nvm/versions/node/v22.20.0/etc/npmrc
+7 verbose title npm install types-registry@latest
+8 verbose argv "install" "--ignore-scripts" "types-registry@latest"
+9 verbose logfile logs-max:10 dir:/home/lk117868/.npm/_logs/2025-10-20T10_13_29_455Z-
+10 verbose logfile /home/lk117868/.npm/_logs/2025-10-20T10_13_29_455Z-debug-0.log
+11 silly logfile start cleaning logs, removing 5 files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 silly logfile done cleaning log files
+14 silly packumentCache corgi:https://registry.npmjs.org/types-registry cache-miss
+15 http fetch GET 200 https://registry.npmjs.org/types-registry 147ms (cache miss)
+16 silly packumentCache corgi:https://registry.npmjs.org/types-registry set size:undefined disposed:false
+17 silly idealTree buildDeps
+18 silly fetch manifest types-registry@0.1.743
+19 silly packumentCache full:https://registry.npmjs.org/types-registry cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/types-registry 76ms (cache miss)
+21 silly packumentCache full:https://registry.npmjs.org/types-registry set size:undefined disposed:false
+22 silly placeDep ROOT types-registry@0.1.743 OK for:  want: 0.1.743
+23 silly reify moves {}
+24 silly audit bulk request { 'types-registry': [ '0.1.743' ] }
+25 http cache types-registry@https://registry.npmjs.org/types-registry/-/types-registry-0.1.743.tgz 0ms (cache hit)
+26 silly tarball no local data for types-registry@https://registry.npmjs.org/types-registry/-/types-registry-0.1.743.tgz. Extracting by manifest.
+27 http fetch GET 200 https://registry.npmjs.org/types-registry/-/types-registry-0.1.743.tgz 127ms (cache miss)
+28 verbose audit error FetchError: network timeout at: https://registry.npmjs.org/-/npm/v1/security/advisories/bulk
+28 verbose audit error     at Timeout.<anonymous> (/usr/local/nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/minipass-fetch/lib/index.js:108:18)
+28 verbose audit error     at listOnTimeout (node:internal/timers:588:17)
+28 verbose audit error     at process.processTimers (node:internal/timers:523:7) {
+28 verbose audit error   code: 'FETCH_ERROR',
+28 verbose audit error   errno: 'FETCH_ERROR',
+28 verbose audit error   type: 'request-timeout'
+28 verbose audit error }
+29 silly audit error undefined
+30 silly audit report null
+31 silly ADD node_modules/types-registry
+32 verbose cwd /home/lk117868/.cache/typescript/5.8
+33 verbose os Linux 6.6.105+
+34 verbose node v22.20.0
+35 verbose npm  v11.6.2
+36 verbose exit 0
+37 info ok

@@ -1,0 +1,31 @@
+{
+    "name": "@types/encodeurl",
+    "version": "1.0.3",
+    "description": "TypeScript definitions for encodeurl",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/encodeurl",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "BendingBender",
+            "githubUsername": "BendingBender",
+            "url": "https://github.com/BendingBender"
+        },
+        {
+            "name": "Sebastian Beltran",
+            "githubUsername": "bjohansebas",
+            "url": "https://github.com/bjohansebas"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/encodeurl"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "peerDependencies": {},
+    "typesPublisherContentHash": "fc8a154d798c26753dcb56142ab709df2d7f4d81371ea03c9fe9d571b3b7ba7d",
+    "typeScriptVersion": "5.1"
+}
