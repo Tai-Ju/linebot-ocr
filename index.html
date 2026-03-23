@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LineBot OCR 藥物位置查詢 | Tai-Ju Liu</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--card:#1c2128;
+  --border:#30363d;--accent:#58a6ff;--green:#3fb950;
+  --orange:#f0883e;--red:#f85149;--yellow:#d29922;
+  --line:#06c755;
+  --text:#e6edf3;--muted:#8b949e;--dim:#21262d;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-weight:300;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,17,23,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 40px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--line);}
+.nav-links{display:flex;gap:24px;list-style:none;}
+.nav-links a{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--accent);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:100px 40px 60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(6,199,85,.05) 0%,transparent 60%);pointer-events:none;}
+.hero-eye{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--line);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.hero-eye::before{content:'';width:28px;height:1px;background:var(--line);}
+.hero h1{font-size:clamp(36px,6vw,68px);font-weight:500;line-height:1.1;letter-spacing:-1px;margin-bottom:16px;}
+.hero h1 em{color:var(--line);font-style:normal;font-family:'JetBrains Mono',monospace;}
+.hero-sub{font-size:15px;color:var(--muted);line-height:1.8;max-width:520px;margin-bottom:40px;}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-line{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--line);color:#fff;padding:11px 24px;border-radius:4px;text-decoration:none;font-weight:700;transition:all .2s;}
+.btn-line:hover{background:#05b34a;transform:translateY(-2px);}
+.btn-g{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--border);color:var(--muted);padding:11px 24px;border-radius:4px;text-decoration:none;transition:all .2s;}
+.btn-g:hover{border-color:var(--accent);color:var(--accent);}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.stat{padding:24px 32px;border-right:1px solid var(--border);transition:background .2s;}
+.stat:last-child{border-right:none;}
+.stat:hover{background:var(--surface);}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--line);margin-bottom:4px;}
+.stat-label{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;}
+
+section{padding:80px 40px;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--line);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;}
+.sec-title{font-size:clamp(22px,3vw,36px);font-weight:500;letter-spacing:-.5px;margin-bottom:48px;}
+
+/* LINE CHAT DEMO */
+.demo-wrap{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;}
+.demo-steps{display:flex;flex-direction:column;gap:20px;}
+.demo-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;cursor:pointer;transition:all .25s;}
+.demo-step:hover,.demo-step.active{border-color:var(--line);background:rgba(6,199,85,.05);}
+.ds-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--line);margin-bottom:6px;letter-spacing:1px;}
+.ds-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+.ds-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* LINE PHONE MOCK */
+.phone-wrap{display:flex;justify-content:center;}
+.phone{width:280px;background:#1a1a1a;border-radius:40px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);border:2px solid #333;}
+.phone-screen{background:#e8e8e8;border-radius:30px;overflow:hidden;min-height:500px;display:flex;flex-direction:column;}
+.line-header{background:var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.line-avatar{width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.line-name{color:#fff;font-size:13px;font-weight:600;font-family:'Noto Sans TC',sans-serif;}
+.line-sub{color:rgba(255,255,255,.7);font-size:10px;}
+.chat-body{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;background:#e8e8e8;overflow:hidden;}
+
+/* Chat bubbles */
+.bubble-wrap{display:flex;gap:6px;align-items:flex-end;}
+.bubble-wrap.user{flex-direction:row-reverse;}
+.bot-avatar{width:28px;height:28px;border-radius:50%;background:var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.bubble{max-width:180px;padding:8px 12px;border-radius:16px;font-size:11px;line-height:1.5;font-family:'Noto Sans TC',sans-serif;}
+.bubble.bot{background:#fff;color:#333;border-bottom-left-radius:4px;}
+.bubble.user{background:var(--line);color:#fff;border-bottom-right-radius:4px;}
+.bubble.img{padding:4px;background:#fff;}
+.bubble.img img{width:140px;height:90px;object-fit:cover;border-radius:10px;display:block;}
+.bubble-time{font-size:9px;color:#999;flex-shrink:0;margin-bottom:2px;}
+
+/* OCR scan animation */
+.scan-box{position:relative;width:140px;height:90px;border-radius:10px;overflow:hidden;background:#222;}
+.scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--green),transparent);animation:scanAnim 1.5s ease-in-out infinite;box-shadow:0 0 8px var(--green);}
+@keyframes scanAnim{0%{top:0}100%{top:100%}}
+.scan-corners::before,.scan-corners::after{content:'';position:absolute;width:12px;height:12px;border-color:var(--green);border-style:solid;}
+.scan-corners::before{top:4px;left:4px;border-width:2px 0 0 2px;}
+.scan-corners::after{bottom:4px;right:4px;border-width:0 2px 2px 0;}
+
+/* result bubble */
+.result-card{background:#fff;border-radius:12px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:#333;line-height:1.7;max-width:200px;}
+.result-title{font-size:12px;font-weight:600;color:var(--line);margin-bottom:4px;}
+.result-row{display:flex;justify-content:space-between;gap:8px;}
+.result-val{color:#333;font-weight:500;}
+
+/* ARCH */
+.arch-flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin-bottom:40px;}
+.arch-node{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 20px;text-align:center;min-width:120px;transition:all .25s;}
+.arch-node:hover{border-color:var(--line);transform:translateY(-3px);}
+.arch-icon{font-size:28px;margin-bottom:8px;}
+.arch-name{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--line);margin-bottom:3px;}
+.arch-tech{font-size:11px;color:var(--muted);}
+.arch-arrow{font-size:20px;color:var(--border);padding:0 8px;align-self:center;}
+
+/* TECH STACK */
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.tech-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;transition:all .25s;}
+.tech-card:hover{border-color:var(--line);}
+.tech-icon{font-size:24px;margin-bottom:10px;}
+.tech-name{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--accent);}
+.tech-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.tech-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tech-tag{font-size:10px;padding:2px 8px;border-radius:12px;background:var(--dim);color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+footer{border-top:1px solid var(--border);padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.ft-name{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--line);}
+.ft-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.ft-links{display:flex;gap:16px;}
+.ft-link{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;}
+.ft-link:hover{color:var(--accent);}
+
+@media(max-width:860px){
+  nav{padding:12px 20px;}.nav-links{display:none;}
+  .hero{padding:90px 20px 40px;}section{padding:60px 20px;}
+  .demo-wrap{grid-template-columns:1fr;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .stat{border-right:none;border-bottom:1px solid var(--border);}
+  .arch-flow{flex-direction:column;}
+  .arch-arrow{transform:rotate(90deg);}
+  .tech-grid{grid-template-columns:1fr 1fr;}
+  footer{padding:24px 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">💊 LineBot OCR</div>
+  <ul class="nav-links">
+    <li><a href="#demo">使用示範</a></li>
+    <li><a href="#arch">系統架構</a></li>
+    <li><a href="#tech">技術棧</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-eye">馬偕紀念醫院 · 藥劑部</div>
+  <h1>拍照就能查<br><em>藥在哪裡</em></h1>
+  <p class="hero-sub">透過 LINE Bot 拍攝藥品，OCR 自動辨識藥品名稱，即時回傳存放位置與相關資訊，讓藥師不再需要翻找位置表。</p>
+  <div class="hero-cta">
+    <a href="https://github.com/Tai-Ju/linebot-ocr" class="btn-line" target="_blank">↗ GitHub Repo</a>
+    <a href="#demo" class="btn-g">查看使用示範 →</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">LINE</div><div class="stat-label">Bot 介面</div></div>
+  <div class="stat"><div class="stat-num">OCR</div><div class="stat-label">圖片辨識</div></div>
+  <div class="stat"><div class="stat-num">GCP</div><div class="stat-label">Cloud Run</div></div>
+  <div class="stat"><div class="stat-num">即時</div><div class="stat-label">位置回傳</div></div>
+</div>
+
+<!-- DEMO -->
+<section id="demo" style="background:var(--surface)">
+  <div class="sec-label">Live Demo</div>
+  <div class="sec-title">使用示範</div>
+  <div class="demo-wrap">
+    <!-- Steps -->
+    <div class="demo-steps">
+      <div class="demo-step active" onclick="showStep(0)">
+        <div class="ds-num">STEP 01</div>
+        <div class="ds-title">📸 拍照上傳藥品</div>
+        <div class="ds-desc">在 LINE 對話中拍攝藥品標籤或藥盒，直接傳送圖片給 Bot。</div>
+      </div>
+      <div class="demo-step" onclick="showStep(1)">
+        <div class="ds-num">STEP 02</div>
+        <div class="ds-title">🔍 OCR 辨識藥品名稱</div>
+        <div class="ds-desc">後端收到圖片後，透過 OCR 引擎提取藥品名稱文字，自動解析關鍵字。</div>
+      </div>
+      <div class="demo-step" onclick="showStep(2)">
+        <div class="ds-num">STEP 03</div>
+        <div class="ds-title">📍 回傳存放位置</div>
+        <div class="ds-desc">比對藥品資料庫，即時回傳存放位置、藥架編號等資訊。</div>
+      </div>
+    </div>
+
+    <!-- Phone mock -->
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="line-header">
+            <div class="line-avatar">💊</div>
+            <div>
+              <div class="line-name">藥品位置查詢 Bot</div>
+              <div class="line-sub">馬偕藥劑部</div>
+            </div>
+          </div>
+          <div class="chat-body" id="chatBody">
+            <!-- Step 0: user sends photo -->
+            <div id="step0">
+              <div class="bubble-wrap" style="margin-bottom:4px;">
+                <div class="bot-avatar">🤖</div>
+                <div class="bubble bot">您好！請傳送藥品照片，我會幫您查詢存放位置 📸</div>
+                <div class="bubble-time">14:30</div>
+              </div>
+              <div class="bubble-wrap user">
+                <div class="bubble-time">14:31</div>
+                <div class="bubble img user" style="background:transparent;padding:0;">
+                  <div class="scan-box">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);display:flex;align-items:center;justify-content:center;color:#4a7a4a;font-size:10px;font-family:monospace;text-align:center;padding:8px;">
+                      Vancomycin<br>500mg/vial<br><span style="color:#3fb950;font-size:9px;">Lot: VC2024</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 1: scanning -->
+            <div id="step1" style="display:none;">
+              <div class="bubble-wrap user">
+                <div class="bubble-time">14:31</div>
+                <div class="bubble img user" style="background:transparent;padding:0;">
+                  <div class="scan-box">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);display:flex;align-items:center;justify-content:center;color:#4a7a4a;font-size:10px;font-family:monospace;text-align:center;padding:8px;">
+                      Vancomycin<br>500mg/vial
+                    </div>
+                    <div class="scan-line"></div>
+                    <div class="scan-corners"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="bubble-wrap">
+                <div class="bot-avatar">🤖</div>
+                <div class="bubble bot">
+                  <span style="display:flex;align-items:center;gap:6px;">
+                    <span style="animation:spin .8s linear infinite;display:inline-block">⟳</span>
+                    OCR 辨識中...
+                  </span>
+                </div>
+                <div class="bubble-time">14:31</div>
+              </div>
+            </div>
+
+            <!-- Step 2: result -->
+            <div id="step2" style="display:none;">
+              <div class="bubble-wrap user">
+                <div class="bubble-time">14:31</div>
+                <div class="bubble img user" style="background:transparent;padding:0;">
+                  <div class="scan-box">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);display:flex;align-items:center;justify-content:center;color:#4a7a4a;font-size:10px;font-family:monospace;text-align:center;padding:8px;">
+                      Vancomycin<br>500mg/vial
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bubble-wrap">
+                <div class="bot-avatar">🤖</div>
+                <div class="result-card">
+                  <div class="result-title">✅ 找到藥品資訊</div>
+                  <div class="result-row"><span>藥品名稱</span><span class="result-val">Vancomycin</span></div>
+                  <div class="result-row"><span>規格</span><span class="result-val">500mg/vial</span></div>
+                  <div class="result-row"><span>存放位置</span><span class="result-val" style="color:var(--line);font-weight:700;">B區 · 3櫃 · 2層</span></div>
+                  <div class="result-row"><span>藥架編號</span><span class="result-val">VAN-B3-2</span></div>
+                  <div style="margin-top:6px;font-size:9px;color:#999;">查詢時間：14:31:08</div>
+                </div>
+                <div class="bubble-time">14:31</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCH -->
+<section id="arch">
+  <div class="sec-label">Architecture</div>
+  <div class="sec-title">系統架構</div>
+  <div class="arch-flow">
+    <div class="arch-node">
+      <div class="arch-icon">📱</div>
+      <div class="arch-name">LINE App</div>
+      <div class="arch-tech">使用者介面</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">🤖</div>
+      <div class="arch-name">LINE Messaging API</div>
+      <div class="arch-tech">Webhook 事件</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">⚡</div>
+      <div class="arch-name">Node.js Server</div>
+      <div class="arch-tech">GCP Cloud Run</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">🔍</div>
+      <div class="arch-name">OCR Engine</div>
+      <div class="arch-tech">圖片文字辨識</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">💾</div>
+      <div class="arch-name">藥品資料庫</div>
+      <div class="arch-tech">位置對照表</div>
+    </div>
+  </div>
+
+  <!-- Flow description -->
+  <div style="max-width:700px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.2;color:var(--muted);">
+    <div><span style="color:var(--line);">1.</span> 使用者在 LINE 傳送藥品圖片</div>
+    <div><span style="color:var(--line);">2.</span> LINE Messaging API 發送 Webhook 事件到 GCP Cloud Run</div>
+    <div><span style="color:var(--line);">3.</span> Node.js 伺服器接收事件，下載圖片</div>
+    <div><span style="color:var(--line);">4.</span> OCR 引擎辨識圖片中的藥品名稱文字</div>
+    <div><span style="color:var(--line);">5.</span> 比對藥品資料庫，查詢存放位置</div>
+    <div><span style="color:var(--line);">6.</span> 透過 LINE Messaging API 回傳查詢結果</div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section id="tech" style="background:var(--surface)">
+  <div class="sec-label">Tech Stack</div>
+  <div class="sec-title">技術棧</div>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-icon">🟢</div>
+      <div class="tech-name">Node.js</div>
+      <div class="tech-desc">後端伺服器，處理 LINE Webhook 事件、圖片下載與資料庫查詢邏輯。</div>
+      <div class="tech-tags"><span class="tech-tag">Express</span><span class="tech-tag">JavaScript</span></div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">💬</div>
+      <div class="tech-name">LINE Messaging API</div>
+      <div class="tech-desc">接收使用者傳送的圖片訊息，回傳文字或 Flex Message 格式的查詢結果。</div>
+      <div class="tech-tags"><span class="tech-tag">Webhook</span><span class="tech-tag">Bot SDK</span></div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">☁️</div>
+      <div class="tech-name">GCP Cloud Run</div>
+      <div class="tech-desc">無伺服器容器化部署，按需自動擴展，支援 HTTPS Webhook 端點。</div>
+      <div class="tech-tags"><span class="tech-tag">Docker</span><span class="tech-tag">Serverless</span></div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">🔍</div>
+      <div class="tech-name">OCR 辨識</div>
+      <div class="tech-desc">圖片文字辨識引擎，從藥品標籤或藥盒圖片中提取藥品名稱關鍵字。</div>
+      <div class="tech-tags"><span class="tech-tag">圖片辨識</span><span class="tech-tag">文字提取</span></div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">💊</div>
+      <div class="tech-name">藥品位置資料庫</div>
+      <div class="tech-desc">儲存藥品名稱與存放位置的對照表，支援模糊比對與多筆結果回傳。</div>
+      <div class="tech-tags"><span class="tech-tag">藥品對照</span><span class="tech-tag">位置查詢</span></div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-icon">🐳</div>
+      <div class="tech-name">Docker</div>
+      <div class="tech-desc">容器化打包應用程式，部署至 GCP Cloud Run，確保環境一致性。</div>
+      <div class="tech-tags"><span class="tech-tag">Container</span><span class="tech-tag">GCP</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="ft-name">Tai-Ju Liu · 劉玳如</div>
+    <div class="ft-sub">馬偕紀念醫院 藥劑部 · LineBot OCR 藥物位置查詢系統</div>
+  </div>
+  <div class="ft-links">
+    <a href="https://github.com/Tai-Ju/linebot-ocr" class="ft-link" target="_blank">GitHub</a>
+    <a href="https://lulu.lufolio.dev" class="ft-link" target="_blank">Portfolio</a>
+  </div>
+</footer>
+
+<script>
+var steps = document.querySelectorAll('.demo-step');
+function showStep(i){
+  steps.forEach(function(s){s.classList.remove('active');});
+  steps[i].classList.add('active');
+  ['step0','step1','step2'].forEach(function(id){
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('step'+i).style.display='block';
+}
+
+// Auto cycle
+var cur=0;
+setInterval(function(){
+  cur=(cur+1)%3;
+  showStep(cur);
+},3000);
+
+// Scroll reveal
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}
+  });
+},{threshold:0.08});
+document.querySelectorAll('.demo-step,.arch-node,.tech-card,.stat').forEach(function(el){
+  el.style.opacity='0';el.style.transform='translateY(16px)';
+  el.style.transition='opacity .5s ease, transform .5s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
